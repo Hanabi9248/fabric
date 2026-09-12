@@ -26,15 +26,16 @@ jobs:
           go vet ./integration/idemix
       - name: Build integration prerequisites
         run: make integration-test-prereqs
-      - name: Idemix channel upgrade integration
-        run: $(go env GOPATH)/bin/ginkgo --poll-progress-after=60s --timeout=25m ./integration/idemix
       - name: Confirm original factory fails the upgrade
         run: |
           git show 65931aaf4bfd54e3b882db6d7dab2970440e6646:msp/factory.go > msp/factory.go
+          trap 'git checkout -- msp/factory.go' EXIT
           set +e
-          $(go env GOPATH)/bin/ginkgo --timeout=10m ./integration/idemix > /tmp/idemix-before.log 2>&1
+          $(go env GOPATH)/bin/ginkgo -v --no-color --timeout=10m ./integration/idemix > /tmp/idemix-before.log 2>&1
           result=$?
           set -e
+          cat /tmp/idemix-before.log
+          echo "Original-factory integration exit: $result"
           test "$result" -ne 0
           grep -F 'Version not recognized [4]' /tmp/idemix-before.log
           git checkout -- msp/factory.go
