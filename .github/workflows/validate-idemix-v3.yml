@@ -1,0 +1,32 @@
+name: Validate Idemix V3 upgrade
+on:
+  push:
+    branches: [codex/validate-idemix-v3]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: 2a5988c184d8f54f9822274c285fb92d2446182a
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Verify candidate tree
+        run: test "$(git rev-parse 'HEAD^{tree}')" = 0dd54ee0c7741eeccc53cd966170d5c1140f63c8
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version-file: go.mod
+      - name: MSP and channel configuration regression tests
+        run: go test -race ./msp/... ./common/channelconfig ./common/capabilities -count=1 -timeout=15m
+      - name: Vet affected packages
+        run: go vet ./msp/... ./common/channelconfig ./common/capabilities ./integration/idemix
+      - name: Repository basic checks
+        run: make basic-checks
+      - name: Build integration prerequisites
+        run: make integration-test-prereqs
+      - name: Idemix channel upgrade integration
+        run: $(go env GOPATH)/bin/ginkgo --poll-progress-after=60s --timeout=25m ./integration/idemix
