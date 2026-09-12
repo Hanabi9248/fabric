@@ -106,7 +106,10 @@ var _ = Describe("EndToEnd", func() {
 			Query(network, peer, "testchannel", "80")
 
 			By("upgrading the channel capability to V3_0")
-			nwo.EnableCapabilities(network, "testchannel", "Channel", "V3_0", orderer, network.Peer("Org1", "peer0"), network.Peer("Org2", "peer0"))
+			nwo.EnableChannelCapabilities(
+				network, "testchannel", "V3_0", false, orderer, []*nwo.Orderer{orderer},
+				network.Peer("Org1", "peer0"), network.Peer("Org2", "peer0"),
+			)
 
 			By("using the existing Idemix identity after the upgrade")
 			InvokeWithIdemix(network, orderer, peer, idemixOrg, "testchannel")
