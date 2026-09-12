@@ -1,0 +1,30 @@
+name: Prepare tested Idemix contribution
+on:
+  push:
+    branches: [codex/prepare-idemix-pr]
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: 04c1d69f905cf50cf27933d7f709d7998fc8b017
+          fetch-depth: 4
+      - name: Create one commit with the verified tree
+        run: |
+          test "$GITHUB_REPOSITORY" = Hanabi9248/fabric
+          test "$(git rev-parse 'HEAD^{tree}')" = ae1cd34a52d6c5d3cfa4bdffa8377d028510910b
+          remote_ref=$(git ls-remote --heads origin refs/heads/codex/idemix-v3-channel)
+          test -z "$remote_ref"
+          git config user.name Hanabi
+          git config user.email 317387557+Hanabi9248@users.noreply.github.com
+          git reset --soft 65931aaf4bfd54e3b882db6d7dab2970440e6646
+          git commit --signoff -m 'msp: allow Idemix on V3_0 channels' -m 'Reuse the MSPv1_3 Idemix implementation for the V3_0 channel capability, as for V1_4_3. Test all supported factory versions and reuse an existing Idemix identity after a channel upgrade.'
+          test "$(git rev-parse 'HEAD^{tree}')" = ae1cd34a52d6c5d3cfa4bdffa8377d028510910b
+          test "$(git rev-parse HEAD^)" = 65931aaf4bfd54e3b882db6d7dab2970440e6646
+          git push origin HEAD:refs/heads/codex/idemix-v3-channel
