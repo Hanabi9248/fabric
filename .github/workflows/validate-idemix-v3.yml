@@ -1,7 +1,7 @@
 name: Validate Idemix V3 upgrade
 on:
   push:
-    branches: [codex/validate-idemix-v3]
+    branches: [codex/validate-idemix-v3e]
   workflow_dispatch:
 permissions:
   contents: read
